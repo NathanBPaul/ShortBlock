@@ -25,20 +25,23 @@
   gap: 18px;
 }
 
+#shorts-scroll-guard-overlay {
+  font-family: "Trebuchet MS", sans-serif !important;
+}
+
 #shorts-scroll-guard-overlay .ssg-heading {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(28px, 5vw, 42px);
-  font-weight: 750;
-  letter-spacing: -0.04em;
+  font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif !important;
+  font-size: clamp(30px, 5vw, 44px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.15 !important;
 }
 
 #shorts-scroll-guard-overlay .ssg-message {
-  max-width: 360px;
-  margin: 0;
-  color: #d4d4d8;
-  font-size: 16px;
-  line-height: 1.5;
+  font-family: "Trebuchet MS", sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.65 !important;
+  max-width: 420px !important;
 }
 
 #shorts-scroll-guard-overlay .ssg-countdown {
