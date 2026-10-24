@@ -10,8 +10,8 @@
   box-sizing: border-box !important;
   padding: 24px !important;
   background: #09090b !important;
-  color: #ffffff !important;
-  font-family: Arial, Helvetica, sans-serif !important;
+  color: #fff !important;
+  font-family: "Trebuchet MS", Arial, sans-serif !important;
   text-align: center !important;
   cursor: not-allowed !important;
   user-select: none !important;
@@ -25,11 +25,8 @@
   gap: 18px;
 }
 
-#shorts-scroll-guard-overlay {
-  font-family: "Trebuchet MS", sans-serif !important;
-}
-
 #shorts-scroll-guard-overlay .ssg-heading {
+  margin: 0;
   font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif !important;
   font-size: clamp(30px, 5vw, 44px) !important;
   font-weight: 800 !important;
@@ -38,7 +35,7 @@
 }
 
 #shorts-scroll-guard-overlay .ssg-message {
-  font-family: "Trebuchet MS", sans-serif !important;
+  margin: 0;
   font-size: 17px !important;
   line-height: 1.65 !important;
   max-width: 420px !important;
@@ -48,16 +45,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 104px;
   height: 104px;
   box-sizing: border-box;
-
   border: 3px solid #f87171;
   border-radius: 50%;
-
-  color: #ffffff;
+  color: #fff;
   font-size: 48px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+/* Block All Shorts: hide shelves, cards, and navigation entries. */
+html.ssg-hide-shorts ytd-reel-shelf-renderer,
+html.ssg-hide-shorts ytd-rich-section-renderer:has(ytd-reel-shelf-renderer),
+html.ssg-hide-shorts ytd-rich-section-renderer:has(a[href^="/shorts/"]),
+html.ssg-hide-shorts ytd-rich-shelf-renderer:has(a[href^="/shorts/"]),
+html.ssg-hide-shorts ytd-rich-item-renderer:has(a[href^="/shorts/"]),
+html.ssg-hide-shorts ytd-rich-grid-row:has(ytd-rich-item-renderer a[href^="/shorts/"]),
+html.ssg-hide-shorts ytd-reel-item-renderer,
+html.ssg-hide-shorts ytd-guide-entry-renderer:has(a[href="/shorts"]),
+html.ssg-hide-shorts ytd-guide-entry-renderer:has(a[href^="/shorts/"]),
+html.ssg-hide-shorts ytd-mini-guide-entry-renderer:has(a[href="/shorts"]),
+html.ssg-hide-shorts ytd-mini-guide-entry-renderer:has(a[href^="/shorts/"]),
+html.ssg-hide-shorts a[href^="/shorts/"] {
+  display: none !important;
 }

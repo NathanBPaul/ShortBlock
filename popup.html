@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ShortBlock</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="logo">SB</div>
+      <div>
+        <h1>ShortBlock</h1>
+        <p>Your friendly neighbourhood Shorts blocker.</p>
+      </div>
+    </header>
+
+    <fieldset>
+      <legend>Blocking mode</legend>
+
+      <label class="option">
+        <input type="radio" name="mode" value="off">
+        <span>
+          <strong>Off</strong>
+          <small>Allow Shorts normally</small>
+        </span>
+      </label>
+
+      <label class="option">
+        <input type="radio" name="mode" value="first">
+        <span>
+          <strong>Block the first scroll</strong>
+          <small>Interrupt when you try to advance</small>
+        </span>
+      </label>
+
+      <label class="option">
+        <input type="radio" name="mode" value="all">
+        <span>
+          <strong>Block all Shorts</strong>
+          <small>Hide entry points and block direct access</small>
+        </span>
+      </label>
+    </fieldset>
+
+    <p id="status" role="status">Loading settings…</p>
+  </main>
+</body>
+</html>

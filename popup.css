@@ -1,0 +1,109 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  background: #09090b;
+  color: #fafafa;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.app {
+  padding: 18px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f87171;
+  color: #09090b;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 21px;
+}
+
+header p,
+small {
+  color: #a1a1aa;
+}
+
+header p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  margin-bottom: 10px;
+  color: #d4d4d8;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 10px;
+  margin-bottom: 7px;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.option:has(input:checked) {
+  border-color: #f87171;
+  background: #211416;
+}
+
+.option input {
+  margin-top: 3px;
+  accent-color: #f87171;
+}
+
+.option span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option strong {
+  font-size: 13px;
+}
+
+.option small {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+#status {
+  min-height: 16px;
+  margin: 12px 0 0;
+  color: #a1a1aa;
+  font-size: 11px;
+  line-height: 1.4;
+}
