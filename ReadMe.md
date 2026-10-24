@@ -5,7 +5,8 @@ Spent too much time scrolling through Shorts until it got exhausting, so I built
 - Open and watch a short as ususal.
 - Detect a plea for dopamine by attempting to advance to the next one.
 - Redirects the vary user to YouTube homepage.
-- Display a full-screen five-second cooldown to discourage further short actions.
+- Display a full-screen ten second cooldown to discourage further short actions.
+- Added option to block off shorts completely
 
 ## Tech stack
 Had to use the following stuff:
