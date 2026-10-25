@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ShortBlock",
-  "version": "0.2.0",
-  "description": "Your friendly neighbourhood Shorts blocker.",
+  "version": "0.3.0",
+  "description": "Your friendly neighbourhood Shorts and Reels blocker.",
   "permissions": ["storage"],
   "icons": {
     "16": "icons/icon16.png",
@@ -18,6 +18,12 @@
       "matches": ["https://www.youtube.com/*"],
       "js": ["content.js"],
       "css": ["style.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["insta.js"],
+      "css": ["insta.css"],
       "run_at": "document_start"
     }
   ]

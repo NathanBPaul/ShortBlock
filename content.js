@@ -61,9 +61,7 @@
       const message = document.createElement("p");
       message.className = "ssg-message";
       message.textContent =
-        "Your friendly neighbourhood ShortBlocker is " +
-        "preventing a mindless dopamine rush. " +
-        "You'll be back home in a few seconds.";
+        "Your friendly neighbourhood ShortBlocker is preventing a mindless dopamine rush. You'll be back home in a few seconds.";
 
       const countdown = document.createElement("div");
       countdown.className = "ssg-countdown";

@@ -4,7 +4,7 @@
 
 body {
   margin: 0;
-  width: 320px;
+  width: 340px;
   background: #09090b;
   color: #fafafa;
   font-family: "Trebuchet MS", Arial, sans-serif;
@@ -18,7 +18,7 @@ header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .logo {
@@ -67,7 +67,7 @@ legend {
   display: flex;
   align-items: flex-start;
   gap: 11px;
-  padding: 12px 10px;
+  padding: 11px 10px;
   margin-bottom: 7px;
   border: 1px solid #27272a;
   border-radius: 10px;
@@ -99,10 +99,21 @@ legend {
   line-height: 1.4;
 }
 
-#status {
+.option-upcoming {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.status {
   min-height: 16px;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   color: #a1a1aa;
   font-size: 11px;
   line-height: 1.4;
+}
+
+.section-divider {
+  height: 1px;
+  background: #27272a;
+  margin: 18px 0;
 }

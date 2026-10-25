@@ -10,22 +10,18 @@
 <body>
   <main class="app">
     <header>
-      <div class="logo"><img
-      class="logo"
-      src="icons/icon48.png"
-      alt="ShortBlock logo">
-      </div>
+      <img class="logo" src="icons/icon48.png" alt="ShortBlock logo">
       <div>
         <h1>ShortBlock</h1>
-        <p>Your friendly neighbourhood Shorts blocker.</p>
+        <p>Your friendly neighbourhood distraction blocker.</p>
       </div>
     </header>
 
     <fieldset>
-      <legend>Blocking mode</legend>
+      <legend>YouTube Shorts</legend>
 
       <label class="option">
-        <input type="radio" name="mode" value="off">
+        <input type="radio" name="youtube-mode" value="off">
         <span>
           <strong>Off</strong>
           <small>Allow Shorts normally</small>
@@ -33,7 +29,7 @@
       </label>
 
       <label class="option">
-        <input type="radio" name="mode" value="first">
+        <input type="radio" name="youtube-mode" value="first">
         <span>
           <strong>Block the first scroll</strong>
           <small>Interrupt when you try to advance</small>
@@ -41,15 +37,56 @@
       </label>
 
       <label class="option">
-        <input type="radio" name="mode" value="all">
+        <input type="radio" name="youtube-mode" value="all">
         <span>
           <strong>Block all Shorts</strong>
           <small>Hide entry points and block direct access</small>
         </span>
       </label>
+
+      <p id="youtube-status" class="status" role="status">
+        Loading settings…
+      </p>
     </fieldset>
 
-    <p id="status" role="status">Loading settings…</p>
+    <div class="section-divider"></div>
+
+    <fieldset>
+      <legend>Instagram Reels</legend>
+
+      <label class="option">
+        <input type="radio" name="instagram-mode" value="off">
+        <span>
+          <strong>Off</strong>
+          <small>Allow Reels normally</small>
+        </span>
+      </label>
+
+      <label class="option">
+        <input type="radio" name="instagram-mode" value="all">
+        <span>
+          <strong>Block all Reels</strong>
+          <small>Hide Reel entry points and block Reel pages</small>
+        </span>
+      </label>
+
+      <label class="option option-upcoming" aria-disabled="true">
+        <input
+          type="radio"
+          name="instagram-mode-upcoming"
+          value="first"
+          disabled
+        >
+        <span>
+          <strong>Block after first Reel</strong>
+          <small>Coming in the next update</small>
+        </span>
+      </label>
+
+      <p id="instagram-status" class="status" role="status">
+        Loading settings…
+      </p>
+    </fieldset>
   </main>
 </body>
 </html>
