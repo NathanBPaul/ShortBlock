@@ -55,19 +55,3 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-
-/* Block All Shorts: hide shelves, cards, and navigation entries. */
-html.ssg-hide-shorts ytd-reel-shelf-renderer,
-html.ssg-hide-shorts ytd-rich-section-renderer:has(ytd-reel-shelf-renderer),
-html.ssg-hide-shorts ytd-rich-section-renderer:has(a[href^="/shorts/"]),
-html.ssg-hide-shorts ytd-rich-shelf-renderer:has(a[href^="/shorts/"]),
-html.ssg-hide-shorts ytd-rich-item-renderer:has(a[href^="/shorts/"]),
-html.ssg-hide-shorts ytd-rich-grid-row:has(ytd-rich-item-renderer a[href^="/shorts/"]),
-html.ssg-hide-shorts ytd-reel-item-renderer,
-html.ssg-hide-shorts ytd-guide-entry-renderer:has(a[href="/shorts"]),
-html.ssg-hide-shorts ytd-guide-entry-renderer:has(a[href^="/shorts/"]),
-html.ssg-hide-shorts ytd-mini-guide-entry-renderer:has(a[href="/shorts"]),
-html.ssg-hide-shorts ytd-mini-guide-entry-renderer:has(a[href^="/shorts/"]),
-html.ssg-hide-shorts a[href^="/shorts/"] {
-  display: none !important;
-}

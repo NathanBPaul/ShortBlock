@@ -1,52 +1,56 @@
 (() => {
   "use strict";
 
+  // ShortBlock Instagram Reels blocker — fresh implementation.
   const MODE_KEY = "shortblockInstagramMode";
-  const ROOT_CLASS = "sb-instagram-block-all";
   const OVERLAY_ID = "sb-instagram-block-overlay";
+  const COUNTDOWN_ID = "sb-instagram-countdown";
   const LOCK_KEY = "__shortblock_instagram_lock_until";
-  const COOLDOWN_MS = 10000;
+  const COOLDOWN_MS = 10_000;
 
   let mode = "off";
-  let overlayTimer = null;
+  let timer = null;
+  let observer = null;
   let routeCheckQueued = false;
-  let lastBlockedViewer = "";
+  let lastDmViewer = "";
+  let started = false;
 
-  const isReelPath = (pathname = location.pathname) =>
-    /^\/(?:reel|reels)(?:\/|$)/i.test(pathname);
+  const now = () => Date.now();
 
-  const getLockUntil = () =>
-    Number(sessionStorage.getItem(LOCK_KEY) || 0);
-
-  const isLocked = () => getLockUntil() > Date.now();
-
-  // Detect a Reel opened in Instagram's /p/ viewer.
-  // Instagram may expose the same shortcode through
-  // a /username/reel/SHORTCODE/ link inside the viewer.
-  function isDmReelViewer() {
-    const match = location.pathname.match(/^\/p\/([^/]+)\/?$/i);
-    if (!match) return false;
-
-    const shortcode = match[1];
-
-    return [...document.querySelectorAll("a[href]")].some(anchor => {
-      try {
-        const url = new URL(anchor.href, location.origin);
-
-        if (url.origin !== location.origin) return false;
-
-        const reelMatch = url.pathname.match(
-          /^\/[^/]+\/reel\/([^/]+)\/?$/i
-        );
-
-        return reelMatch && reelMatch[1] === shortcode;
-      } catch {
-        return false;
-      }
-    });
+  function getLockUntil() {
+    try {
+      return Number(sessionStorage.getItem(LOCK_KEY)) || 0;
+    } catch {
+      return 0;
+    }
   }
 
-  function reelHrefFromElement(target) {
+  function isLocked() {
+    return getLockUntil() > now();
+  }
+
+  function saveLockUntil(timestamp) {
+    try {
+      if (timestamp > 0) {
+        sessionStorage.setItem(LOCK_KEY, String(timestamp));
+      } else {
+        sessionStorage.removeItem(LOCK_KEY);
+      }
+    } catch {
+      // The in-memory overlay can still work if storage is unavailable.
+    }
+  }
+
+  // Match actual Reel permalink routes, including username-based URLs.
+  function isReelPath(pathname = location.pathname) {
+    return (
+      /^\/reel\/[^/]+\/?$/i.test(pathname) ||
+      /^\/reels?\/[^/]+\/?$/i.test(pathname) ||
+      /^\/[^/]+\/reel\/[^/]+\/?$/i.test(pathname)
+    );
+  }
+
+  function getReelUrlFromElement(target) {
     if (!(target instanceof Element)) return null;
 
     const anchor = target.closest("a[href]");
@@ -64,29 +68,58 @@
     }
   }
 
-  function removeOverlay() {
-    if (overlayTimer) clearInterval(overlayTimer);
+  // DM viewers can use /p/SHORTCODE/ instead of a Reel permalink.
+  // Only treat that viewer as a Reel when the DOM contains a matching
+  // /username/reel/SHORTCODE/ link. Do not block every /p/ post.
+  function getDmReelViewerKey() {
+    const match = location.pathname.match(/^\/p\/([^/]+)\/?$/i);
+    if (!match) return "";
 
-    overlayTimer = null;
+    const shortcode = match[1];
+
+    for (const anchor of document.querySelectorAll("a[href]")) {
+      try {
+        const url = new URL(anchor.href, location.origin);
+
+        if (url.origin !== location.origin) continue;
+
+        const reelMatch = url.pathname.match(
+          /^\/[^/]+\/reel\/([^/]+)\/?$/i
+        );
+
+        if (reelMatch && reelMatch[1] === shortcode) {
+          return location.pathname;
+        }
+      } catch {
+        // Ignore malformed links.
+      }
+    }
+
+    return "";
+  }
+
+  function removeOverlay() {
+    if (timer !== null) {
+      clearInterval(timer);
+      timer = null;
+    }
+
     document.getElementById(OVERLAY_ID)?.remove();
   }
 
-  function updateOverlayCountdown() {
-    const countdown = document.getElementById(
-      "sb-instagram-countdown"
-    );
-
+  function updateCountdown() {
+    const countdown = document.getElementById(COUNTDOWN_ID);
     if (!countdown) return;
 
     const remaining = Math.max(
       0,
-      Math.ceil((getLockUntil() - Date.now()) / 1000)
+      Math.ceil((getLockUntil() - now()) / 1000)
     );
 
     countdown.textContent = String(remaining);
 
     if (remaining === 0) {
-      sessionStorage.removeItem(LOCK_KEY);
+      saveLockUntil(0);
       removeOverlay();
     }
   }
@@ -94,37 +127,42 @@
   function showOverlay() {
     if (!document.documentElement || !isLocked()) return;
 
-    if (!document.getElementById(OVERLAY_ID)) {
-      const overlay = document.createElement("div");
+    let overlay = document.getElementById(OVERLAY_ID);
+
+    if (!overlay) {
+      overlay = document.createElement("div");
       overlay.id = OVERLAY_ID;
       overlay.setAttribute("role", "dialog");
       overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute("aria-labelledby", "sb-instagram-heading");
 
       const panel = document.createElement("div");
       panel.className = "sb-instagram-panel";
 
       const heading = document.createElement("h1");
+      heading.id = "sb-instagram-heading";
       heading.className = "sb-instagram-heading";
       heading.textContent = "Naah, we don't do that here.";
 
       const message = document.createElement("p");
       message.className = "sb-instagram-message";
-      message.textContent ="Your friendly neighbourhood ShortBlocker is keeping reels out of the way. Take a breath and stop slacking.";
+      message.textContent ="Your friendly neighbourhood ShortBlocker is keeping them reels out of the way. Stop slacking and get on with it.";
 
       const countdown = document.createElement("div");
-      countdown.id = "sb-instagram-countdown";
+      countdown.id = COUNTDOWN_ID;
       countdown.className = "sb-instagram-countdown";
-      countdown.setAttribute("aria-live", "assertive");
+      countdown.setAttribute("aria-live", "off");
+      countdown.setAttribute("aria-label", "Seconds remaining");
 
-      panel.append(heading, message, countdown, homeLink);
+      panel.append(heading, message, countdown);
       overlay.append(panel);
       document.documentElement.append(overlay);
     }
 
-    updateOverlayCountdown();
+    updateCountdown();
 
-    if (!overlayTimer) {
-      overlayTimer = setInterval(updateOverlayCountdown, 200);
+    if (timer === null) {
+      timer = setInterval(updateCountdown, 200);
     }
   }
 
@@ -134,20 +172,16 @@
       return;
     }
 
-    lastBlockedViewer = viewerKey;
-
-    sessionStorage.setItem(
-      LOCK_KEY,
-      String(Date.now() + COOLDOWN_MS)
-    );
-
+    lastDmViewer = viewerKey;
+    saveLockUntil(now() + COOLDOWN_MS);
     showOverlay();
   }
 
-  function blockReelNavigation(event) {
+  // Stop ordinary and middle-click navigation before Instagram handles it.
+  function interceptReelLink(event) {
     if (mode !== "all" || isLocked()) return;
 
-    const url = reelHrefFromElement(event.target);
+    const url = getReelUrlFromElement(event.target);
     if (!url) return;
 
     event.preventDefault();
@@ -156,14 +190,14 @@
     triggerBlock(url.pathname);
   }
 
-  function blockDuringCooldown(event) {
+  // Prevent interaction with the page beneath the full-screen overlay.
+  function blockInteractionDuringCooldown(event) {
     if (!isLocked()) return;
 
-    // Keep the overlay's Home link usable.
-    if (
-      event.target instanceof Element &&
-      event.target.closest(`#${OVERLAY_ID} a`)
-    ) {
+    const overlay = document.getElementById(OVERLAY_ID);
+
+    if (overlay && event.target instanceof Node &&
+        overlay.contains(event.target)) {
       return;
     }
 
@@ -171,38 +205,42 @@
     event.stopImmediatePropagation();
   }
 
-  function guardCurrentRoute() {
+  function returnHomeAndBlock() {
     if (mode !== "all" || !isReelPath()) return;
 
+    // Change the visible route without navigating through another Reel.
     try {
       history.replaceState(history.state, "", "/");
     } catch {
-      location.replace("/");
-      return;
+      // If history manipulation fails, avoid an uncontrolled redirect loop.
     }
 
     triggerBlock("/");
   }
 
-  function checkCurrentViewer() {
+  function checkCurrentRoute() {
     if (mode !== "all") return;
 
     if (isReelPath()) {
-      guardCurrentRoute();
+      returnHomeAndBlock();
       return;
     }
 
-    if (!isDmReelViewer()) {
-      lastBlockedViewer = "";
+    const dmViewerKey = getDmReelViewerKey();
+
+    if (!dmViewerKey) {
+      lastDmViewer = "";
       return;
     }
 
-    const viewerKey = location.pathname;
+    if (dmViewerKey === lastDmViewer && isLocked()) {
+      showOverlay();
+      return;
+    }
 
-    // Avoid repeatedly triggering the same viewer.
-    if (lastBlockedViewer === viewerKey) return;
-
-    triggerBlock(viewerKey);
+    if (dmViewerKey !== lastDmViewer) {
+      triggerBlock(dmViewerKey);
+    }
   }
 
   function queueRouteCheck() {
@@ -212,8 +250,7 @@
 
     queueMicrotask(() => {
       routeCheckQueued = false;
-      checkCurrentViewer();
-      applyMode();
+      checkCurrentRoute();
     });
   }
 
@@ -221,98 +258,96 @@
     if (!document.documentElement) return;
 
     document.documentElement.classList.toggle(
-      ROOT_CLASS,
+      "sb-instagram-block-all",
       mode === "all"
     );
 
     if (mode === "off") {
-      sessionStorage.removeItem(LOCK_KEY);
-      lastBlockedViewer = "";
+      saveLockUntil(0);
+      lastDmViewer = "";
       removeOverlay();
       return;
     }
 
-    checkCurrentViewer();
+    if (isLocked()) {
+      showOverlay();
+    }
 
-    if (isLocked()) showOverlay();
+    checkCurrentRoute();
+  }
+
+  function onStorageChanged(changes, area) {
+    if (area !== "sync" || !changes[MODE_KEY]) return;
+
+    const nextMode = changes[MODE_KEY].newValue;
+    mode = nextMode === "all" ? "all" : "off";
+
+    applyMode();
   }
 
   function boot() {
-    document.addEventListener("click", blockReelNavigation, {
-      capture: true
-    });
+    if (started) return;
+    started = true;
 
-    document.addEventListener("auxclick", blockReelNavigation, {
-      capture: true
-    });
+    document.addEventListener("click", interceptReelLink, true);
+    document.addEventListener("auxclick", interceptReelLink, true);
 
     for (const type of [
       "pointerdown",
       "mousedown",
       "keydown",
+      "keyup",
       "wheel",
       "touchmove",
       "touchend",
-      "contextmenu"
+      "contextmenu",
+      "submit"
     ]) {
-      document.addEventListener(type, blockDuringCooldown, {
-        capture: true,
-        passive: false
-      });
+      document.addEventListener(
+        type,
+        blockInteractionDuringCooldown,
+        { capture: true, passive: false }
+      );
     }
 
     window.addEventListener("popstate", queueRouteCheck);
 
-    const originalPushState = history.pushState;
-    history.pushState = function (...args) {
-      const result = originalPushState.apply(this, args);
-      queueRouteCheck();
-      return result;
-    };
+    // Instagram uses client-side navigation. Watch history changes too.
+    for (const method of ["pushState", "replaceState"]) {
+      const original = history[method];
 
-    const originalReplaceState = history.replaceState;
-    history.replaceState = function (...args) {
-      const result = originalReplaceState.apply(this, args);
-      queueRouteCheck();
-      return result;
-    };
+      history[method] = function (...args) {
+        const result = original.apply(this, args);
+        queueRouteCheck();
+        return result;
+      };
+    }
 
     chrome.storage.sync.get(
       { [MODE_KEY]: "off" },
       result => {
-        mode = ["off", "all"].includes(result[MODE_KEY])
-          ? result[MODE_KEY]
-          : "off";
-
+        mode = result[MODE_KEY] === "all" ? "all" : "off";
         applyMode();
       }
     );
 
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (area !== "sync" || !changes[MODE_KEY]) return;
+    chrome.storage.onChanged.addListener(onStorageChanged);
 
-      mode = ["off", "all"].includes(changes[MODE_KEY].newValue)
-        ? changes[MODE_KEY].newValue
-        : "off";
-
-      applyMode();
-    });
-
-    const observer = new MutationObserver(() => {
+    observer = new MutationObserver(() => {
       if (mode !== "all") return;
-      checkCurrentViewer();
 
       if (isLocked() && !document.getElementById(OVERLAY_ID)) {
         showOverlay();
       }
+
+      // Reel links may appear after Instagram renders a viewer.
+      checkCurrentRoute();
     });
 
-    if (document.documentElement) {
-      observer.observe(document.documentElement, {
-        childList: true,
-        subtree: true
-      });
-    }
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
   }
 
   if (document.documentElement) {

@@ -1,70 +1,146 @@
-/* Full-screen ShortBlock Instagram Reel reminder. */
+/* ---------- Blocked Reels in Home feed ---------- */
+
+html.sb-instagram-block-all
+  main article:has(a[href*="/reel/"]),
+html.sb-instagram-block-all
+  main article:has(a[href*="/reels/"]) {
+  display: none !important;
+}
+
+/* ---------- Remove Instagram's Reels sidebar option ---------- */
+
+html.sb-instagram-block-all
+  a[href="/reels/"],
+html.sb-instagram-block-all
+  a[href^="/reels/"],
+html.sb-instagram-block-all
+  a[href="/reel/"],
+html.sb-instagram-block-all
+  a[href^="/reel/"] {
+  display: none !important;
+}
+
+/* ---------- Full-screen blocker overlay ---------- */
+
 #sb-instagram-block-overlay {
   position: fixed !important;
   inset: 0 !important;
   z-index: 2147483647 !important;
+
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+
   width: 100vw !important;
   height: 100vh !important;
   box-sizing: border-box !important;
   padding: 24px !important;
+
   background: #09090b !important;
-  color: #fff !important;
+  color: #ffffff !important;
+
   font-family: "Trebuchet MS", Arial, sans-serif !important;
+  font-weight: 400 !important;
   text-align: center !important;
+
   cursor: not-allowed !important;
   user-select: none !important;
 }
 
+/* Apply Trebuchet MS consistently to every overlay element */
+
+#sb-instagram-block-overlay,
+#sb-instagram-block-overlay * {
+  box-sizing: border-box !important;
+  font-family: "Trebuchet MS", Arial, sans-serif !important;
+}
+
+/* ---------- Overlay content ---------- */
+
 #sb-instagram-block-overlay .sb-instagram-panel {
-  width: min(440px, 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
+
+  width: min(520px, 100%);
+  margin: auto;
 }
+
+/* ---------- Heading ---------- */
 
 #sb-instagram-block-overlay .sb-instagram-heading {
+  max-width: 100%;
   margin: 0;
-  color: #fff !important;
-  font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif !important;
-  font-size: clamp(30px, 5vw, 44px) !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.03em !important;
-  line-height: 1.15 !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  font-size: clamp(32px, 5vw, 44px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.2 !important;
+
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  text-shadow: none !important;
 }
 
+/* ---------- Description ---------- */
+
 #sb-instagram-block-overlay .sb-instagram-message {
+  max-width: 440px;
   margin: 0;
-  color: #fff !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
   font-size: 17px !important;
+  font-weight: 400 !important;
   line-height: 1.65 !important;
-  max-width: 420px !important;
+  letter-spacing: 0 !important;
 }
+
+/* ---------- Countdown circle ---------- */
 
 #sb-instagram-block-overlay .sb-instagram-countdown {
   display: flex;
   align-items: center;
   justify-content: center;
+
   width: 104px;
   height: 104px;
-  box-sizing: border-box;
-  border: 3px solid #f87171;
+  flex-shrink: 0;
+
+  border: 3px solid #ff6b75;
   border-radius: 50%;
-  color: #fff;
-  font-size: 48px;
-  font-weight: 800;
+
+  color: #ffffff !important;
+  font-size: 48px !important;
+  font-weight: 700 !important;
   font-variant-numeric: tabular-nums;
+  line-height: 1 !important;
 }
 
-#sb-instagram-block-overlay .sb-instagram-heading,
-#sb-instagram-block-overlay h1.sb-instagram-heading {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  opacity: 1 !important;
-  filter: none !important;
-  mix-blend-mode: normal !important;
-  text-shadow: none !important;
+/* ---------- Smaller screens ---------- */
+
+@media (max-width: 480px) {
+  #sb-instagram-block-overlay {
+    padding: 20px !important;
+  }
+
+  #sb-instagram-block-overlay .sb-instagram-panel {
+    gap: 20px;
+  }
+
+  #sb-instagram-block-overlay .sb-instagram-message {
+    font-size: 16px !important;
+  }
+
+  #sb-instagram-block-overlay .sb-instagram-countdown {
+    width: 92px;
+    height: 92px;
+    font-size: 42px !important;
+  }
 }

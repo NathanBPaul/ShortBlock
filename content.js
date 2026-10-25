@@ -10,6 +10,7 @@
   let lockTimer = null;
   let touchStart = null;
   let routeCheckPending = false;
+  let sidebarObserver = null;
 
   const isShortsPage = () =>
     /^\/shorts(?:\/|$)/.test(location.pathname);
@@ -19,8 +20,22 @@
 
   const isLocked = () => lockUntil() > Date.now();
 
+  // Hide or restore only the Shorts entry in YouTube's sidebar.
+  function updateShortsSidebar() {
+    if (!document.documentElement) return;
+
+    document.querySelectorAll("ytd-guide-entry-renderer").forEach(entry => {
+      const title = entry.querySelector("yt-formatted-string.title");
+
+      if (title?.textContent.trim() === "Shorts") {
+        entry.style.display = mode === "all" ? "none" : "";
+      }
+    });
+  }
+
   function removeOverlay() {
     if (lockTimer) clearInterval(lockTimer);
+
     lockTimer = null;
     document.getElementById(OVERLAY_ID)?.remove();
   }
@@ -103,6 +118,8 @@
       mode === "all"
     );
 
+    updateShortsSidebar();
+
     if (mode === "off") {
       sessionStorage.removeItem(LOCK_KEY);
       removeOverlay();
@@ -172,6 +189,7 @@
 
   function checkRoute() {
     if (routeCheckPending) return;
+
     routeCheckPending = true;
 
     queueMicrotask(() => {
@@ -202,8 +220,14 @@
     });
 
     for (const type of [
-      "click", "pointerdown", "mousedown", "keyup",
-      "wheel", "touchmove", "touchend", "contextmenu"
+      "click",
+      "pointerdown",
+      "mousedown",
+      "keyup",
+      "wheel",
+      "touchmove",
+      "touchend",
+      "contextmenu"
     ]) {
       document.addEventListener(type, blockDuringCooldown, {
         capture: true,
@@ -217,9 +241,11 @@
 
     chrome.storage.sync.get({ [MODE_KEY]: "first" }, result => {
       mode = result[MODE_KEY];
+
       if (!["off", "first", "all"].includes(mode)) {
         mode = "first";
       }
+
       applyMode();
     });
 
@@ -227,14 +253,24 @@
       if (area !== "sync" || !changes[MODE_KEY]) return;
 
       mode = changes[MODE_KEY].newValue || "first";
+
+      if (!["off", "first", "all"].includes(mode)) {
+        mode = "first";
+      }
+
       applyMode();
     });
 
-    new MutationObserver(() => {
+    // YouTube rebuilds sidebar elements dynamically.
+    sidebarObserver = new MutationObserver(() => {
+      updateShortsSidebar();
+
       if (isLocked() && !document.getElementById(OVERLAY_ID)) {
         showOverlay();
       }
-    }).observe(document.documentElement, {
+    });
+
+    sidebarObserver.observe(document.documentElement, {
       childList: true,
       subtree: true
     });
@@ -243,12 +279,16 @@
   if (document.documentElement) {
     boot();
   } else {
-    const observer = new MutationObserver(() => {
+    const startObserver = new MutationObserver(() => {
       if (!document.documentElement) return;
-      observer.disconnect();
+
+      startObserver.disconnect();
       boot();
     });
 
-    observer.observe(document, { childList: true, subtree: true });
+    startObserver.observe(document, {
+      childList: true,
+      subtree: true
+    });
   }
 })();
