@@ -16,14 +16,14 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["youtube.js"],
-      "css": ["youtube.css"],
+      "js": ["Youtube/youtube.js"],
+      "css": ["Youtube/youtube.css"],
       "run_at": "document_start"
     },
     {
       "matches": ["https://www.instagram.com/*"],
-      "js": ["insta.js"],
-      "css": ["insta.css"],
+      "js": ["Instagram/insta.js"],
+      "css": ["Instagram/insta.css"],
       "run_at": "document_start"
     }
   ]
