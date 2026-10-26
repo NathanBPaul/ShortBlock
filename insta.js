@@ -11,6 +11,7 @@
   const DM_REEL_KEY = "__sb_instagram_dm_reel_path";
 
   const COOLDOWN_MS = 10_000;
+  const DOM_WORK_DELAY_MS = 150;
 
   let mode = "off";
   let timer = null;
@@ -18,6 +19,7 @@
   let routeCheckQueued = false;
   let returningHome = false;
   let lastBlockedDmViewer = "";
+  let domWorkTimer = null;
 
   let touchStart = null;
   let touchBlockTriggered = false;
@@ -65,7 +67,6 @@
     return /^\/direct(?:\/|$)/i.test(pathname);
   }
 
-  // Return a Reel permalink path, or an empty string.
   function getReelPath(pathname = location.pathname) {
     if (
       /^\/reel\/[^/]+\/?$/i.test(pathname) ||
@@ -102,7 +103,6 @@
   function getLockingContext() {
     if (mode !== "first") return "";
 
-    // Reels-tab root or a Reel reached from that tab.
     if (
       isReelsTabRoot() ||
       (
@@ -113,19 +113,16 @@
       return "tab";
     }
 
-    // A Reel deliberately opened through a DM link.
     const dmPath = readSession(DM_REEL_KEY);
 
     if (dmPath && dmPath === location.pathname) {
       return "dm";
     }
 
-    // Instagram sometimes displays a DM Reel as /p/SHORTCODE/.
     if (getDmReelViewerKey()) {
       return "dm";
     }
 
-    // Also limit scrolling on an individually opened Reel.
     if (isReelPage()) {
       return "individual";
     }
@@ -133,9 +130,6 @@
     return "";
   }
 
-  // Identify Reel viewers that Instagram displays through /p/ URLs.
-  // A normal post is not classified as a Reel unless a matching Reel
-  // permalink is present in the viewer.
   function getDmReelViewerKey() {
     const match = location.pathname.match(/^\/p\/([^/]+)\/?$/i);
     if (!match) return "";
@@ -163,7 +157,6 @@
     return "";
   }
 
-  // Try to find the Reel currently displayed when the URL is just /reels/.
   function discoverVisibleReelPath() {
     const currentPath = getReelPath();
 
@@ -198,13 +191,13 @@
         video,
         score: visibleArea - centerDistance * 100
       };
-    }).filter(item => item.score > 0)
+    })
+      .filter(item => item.score > 0)
       .sort((a, b) => b.score - a.score);
 
     for (const item of visibleVideos) {
       let element = item.video;
 
-      // Search the nearest surrounding viewer/card first.
       for (let depth = 0; element && depth < 9; depth++) {
         const anchors = [];
 
@@ -292,7 +285,7 @@
 
       const message = document.createElement("p");
       message.className = "sb-instagram-message";
-      message.textContent ="Your friendly neighbourhood ShortBlocker is keeping endless reels out of the way. Take a breath and stop sulking.";
+      message.textContent = "Your friendly neighbourhood ShortBlocker is keeping endless reels out of the way. Take a breath and stop sulking.";
 
       const countdown = document.createElement("div");
       countdown.id = COUNTDOWN_ID;
@@ -335,7 +328,6 @@
       returningHome = true;
 
       if (location.pathname !== "/") {
-        // Replace the blocked route so Back doesn't reopen it immediately.
         location.replace("/");
         return;
       }
@@ -348,7 +340,6 @@
     const url = getAnchorUrl(event.target);
     if (!url) return;
 
-    // Block All mode prevents all Reel links and direct Reels-tab entry.
     if (mode === "all") {
       if (isReelPage(url.pathname)) {
         event.preventDefault();
@@ -368,7 +359,6 @@
 
     if (mode !== "first") return;
 
-    // Reels deliberately opened from a DM remain individually accessible.
     if (isDirectInboxPath()) {
       const dmReelPath = getReelPath(url.pathname);
 
@@ -380,8 +370,6 @@
       return;
     }
 
-    // Let the first Reels-tab visit open normally. Once a first Reel has
-    // been recorded, route later visits back to that same Reel.
     if (isReelsTabRoot(url.pathname)) {
       clearSessionDmPath();
       writeSession(TAB_ACTIVE_KEY, "1");
@@ -432,14 +420,11 @@
     }
 
     if (context === "tab") {
-      // Save the current Reel before returning Home.
       rememberFirstReel();
       startCooldown({ returnHome: true });
       return;
     }
 
-    // DM or individually opened Reel: block advancing, but don't prevent
-    // the user from opening a different Reel directly from their chat.
     startCooldown();
   }
 
@@ -489,7 +474,6 @@
     const dy = touch.clientY - touchStart.y;
     const dx = touch.clientX - touchStart.x;
 
-    // An upward swipe advances to the next Reel.
     if (dy < -55 && Math.abs(dy) > Math.abs(dx) * 1.2) {
       const context = getLockingContext();
       if (!context) return;
@@ -525,19 +509,15 @@
       return;
     }
 
-    // First-Reel mode.
     if (isReelsTabRoot()) {
       clearSessionDmPath();
       writeSession(TAB_ACTIVE_KEY, "1");
 
       const firstPath = readSession(FIRST_REEL_KEY);
 
-      if (firstPath) {
-        // The tab was reopened: return to the same known Reel.
-        if (location.pathname !== firstPath) {
-          location.replace(firstPath);
-          return;
-        }
+      if (firstPath && location.pathname !== firstPath) {
+        location.replace(firstPath);
+        return;
       }
 
       rememberFirstReel();
@@ -561,7 +541,6 @@
       return;
     }
 
-    // Keep the DM context separate from the Reels-tab allowance.
     const dmViewer = getDmReelViewerKey();
 
     if (!dmViewer && readSession(DM_REEL_KEY) !== location.pathname) {
@@ -581,8 +560,41 @@
     queueMicrotask(() => {
       routeCheckQueued = false;
       checkCurrentRoute();
-      rememberFirstReel();
+
+      // Discovery is cheap when the first path has already been saved.
+      if (
+        mode === "first" &&
+        readSession(TAB_ACTIVE_KEY) === "1" &&
+        !readSession(FIRST_REEL_KEY)
+      ) {
+        rememberFirstReel();
+      }
     });
+  }
+
+  // Coalesce bursts of Instagram DOM mutations into one small batch of work.
+  function scheduleDomWork() {
+    if (domWorkTimer !== null) return;
+
+    domWorkTimer = setTimeout(() => {
+      domWorkTimer = null;
+
+      if (mode === "off") return;
+
+      if (isLocked() && !document.getElementById(OVERLAY_ID)) {
+        showOverlay();
+      }
+
+      if (
+        mode === "first" &&
+        readSession(TAB_ACTIVE_KEY) === "1" &&
+        !readSession(FIRST_REEL_KEY)
+      ) {
+        rememberFirstReel();
+      }
+
+      checkCurrentRoute();
+    }, DOM_WORK_DELAY_MS);
   }
 
   function applyMode() {
@@ -604,15 +616,26 @@
       writeSession(FIRST_REEL_KEY, "");
       clearSessionDmPath();
       removeOverlay();
+
+      if (domWorkTimer !== null) {
+        clearTimeout(domWorkTimer);
+        domWorkTimer = null;
+      }
+
       return;
     }
 
-    if (isLocked()) {
-      showOverlay();
-    }
+    if (isLocked()) showOverlay();
 
     checkCurrentRoute();
-    rememberFirstReel();
+
+    if (
+      mode === "first" &&
+      readSession(TAB_ACTIVE_KEY) === "1" &&
+      !readSession(FIRST_REEL_KEY)
+    ) {
+      rememberFirstReel();
+    }
   }
 
   function normalizeMode(value) {
@@ -700,14 +723,7 @@
 
     observer = new MutationObserver(() => {
       if (mode === "off") return;
-
-      if (isLocked() && !document.getElementById(OVERLAY_ID)) {
-        showOverlay();
-      }
-
-      // Instagram renders its viewer and Reel links asynchronously.
-      rememberFirstReel();
-      checkCurrentRoute();
+      scheduleDomWork();
     });
 
     observer.observe(document.documentElement, {
