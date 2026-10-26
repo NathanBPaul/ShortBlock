@@ -4,7 +4,7 @@ const YOUTUBE_MODE_KEY = "shortblockMode";
 const INSTAGRAM_MODE_KEY = "shortblockInstagramMode";
 
 const VALID_YOUTUBE_MODES = ["off", "first", "all"];
-const VALID_INSTAGRAM_MODES = ["off", "all"];
+const VALID_INSTAGRAM_MODES = ["off", "first", "all"];
 
 const youtubeStatus = document.getElementById("youtube-status");
 const instagramStatus = document.getElementById("instagram-status");
@@ -28,6 +28,7 @@ function describeYouTubeMode(mode) {
 function describeInstagramMode(mode) {
   return {
     off: "Instagram Reels blocking is off.",
+    first: "One Reel at a time. Scrolling to another is blocked.",
     all: "All Instagram Reels are blocked."
   }[mode] || "Settings saved.";
 }
@@ -59,19 +60,11 @@ function loadSettings() {
         `input[name="instagram-mode"][value="${instagramMode}"]`
       );
 
-      if (selectedYouTube) {
-        selectedYouTube.checked = true;
-      }
+      if (selectedYouTube) selectedYouTube.checked = true;
+      if (selectedInstagram) selectedInstagram.checked = true;
 
-      if (selectedInstagram) {
-        selectedInstagram.checked = true;
-      }
-
-      youtubeStatus.textContent =
-        describeYouTubeMode(youtubeMode);
-
-      instagramStatus.textContent =
-        describeInstagramMode(instagramMode);
+      youtubeStatus.textContent = describeYouTubeMode(youtubeMode);
+      instagramStatus.textContent = describeInstagramMode(instagramMode);
     }
   );
 }
@@ -87,13 +80,11 @@ youtubeRadios.forEach(radio => {
       { [YOUTUBE_MODE_KEY]: radio.value },
       () => {
         if (chrome.runtime.lastError) {
-          youtubeStatus.textContent =
-            "Couldn't save. Please try again.";
+          youtubeStatus.textContent = "Couldn't save. Please try again.";
           return;
         }
 
-        youtubeStatus.textContent =
-          describeYouTubeMode(radio.value);
+        youtubeStatus.textContent = describeYouTubeMode(radio.value);
       }
     );
   });
@@ -110,13 +101,11 @@ instagramRadios.forEach(radio => {
       { [INSTAGRAM_MODE_KEY]: radio.value },
       () => {
         if (chrome.runtime.lastError) {
-          instagramStatus.textContent =
-            "Couldn't save. Please try again.";
+          instagramStatus.textContent = "Couldn't save. Please try again.";
           return;
         }
 
-        instagramStatus.textContent =
-          describeInstagramMode(radio.value);
+        instagramStatus.textContent = describeInstagramMode(radio.value);
       }
     );
   });

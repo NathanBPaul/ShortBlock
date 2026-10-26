@@ -1,8 +1,8 @@
-/* ---------- Blocked Reels in Home feed ---------- */
+/* Hide Reel posts from the Home feed in either blocking mode. */
 
-html.sb-instagram-block-all
+html.sb-instagram-hide-feed-reels
   main article:has(a[href*="/reel/"]),
-html.sb-instagram-block-all
+html.sb-instagram-hide-feed-reels
   main article:has(a[href*="/reels/"]) {
   display: none !important;
 }
