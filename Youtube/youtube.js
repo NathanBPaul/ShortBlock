@@ -33,6 +33,24 @@
     });
   }
 
+  // Hide Shorts shelves on the YouTube homepage.
+function updateShortsShelves() {
+  document.querySelectorAll("ytd-rich-shelf-renderer").forEach(shelf => {
+    const title = shelf.querySelector("#rich-shelf-header #title");
+
+    const isShortsShelf =
+      title?.textContent.trim() === "Shorts";
+
+    if (mode === "all" && isShortsShelf) {
+      shelf.style.setProperty("display", "none", "important");
+      shelf.dataset.shortblockHidden = "true";
+    } else if (shelf.dataset.shortblockHidden === "true") {
+      shelf.style.removeProperty("display");
+      delete shelf.dataset.shortblockHidden;
+    }
+  });
+}
+
   function removeOverlay() {
     if (lockTimer) clearInterval(lockTimer);
 
@@ -119,6 +137,7 @@
     );
 
     updateShortsSidebar();
+    updateShortsShelves();
 
     if (mode === "off") {
       sessionStorage.removeItem(LOCK_KEY);
@@ -264,6 +283,7 @@
     // YouTube rebuilds sidebar elements dynamically.
     sidebarObserver = new MutationObserver(() => {
       updateShortsSidebar();
+      updateShortsShelves();
 
       if (isLocked() && !document.getElementById(OVERLAY_ID)) {
         showOverlay();
